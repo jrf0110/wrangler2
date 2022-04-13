@@ -708,6 +708,9 @@ describe("wrangler dev", () => {
           - {\\"name\\":\\"NAME_2\\",\\"class_name\\":\\"CLASS_2\\",\\"script_name\\":\\"SCRIPT_A\\"}
           - {\\"name\\":\\"NAME_4\\",\\"class_name\\":\\"CLASS_4\\",\\"script_name\\":\\"SCRIPT_B\\"}
 
+
+        [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mIn wrangler.toml, you have configured [durable_objects] exported by this Worker (CLASS_1,CLASS_3), but no [migrations] for them. This may not work as expected until you add a [migrations] section to your wrangler.toml. Refer to https://developers.cloudflare.com/workers/learning/using-durable-objects/#durable-object-migrations-in-wranglertoml for more details.[0m
+
         "
       `);
       expect(std.err).toMatchInlineSnapshot(`""`);

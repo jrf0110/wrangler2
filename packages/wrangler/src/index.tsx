@@ -19,6 +19,7 @@ import { createWorkerUploadForm } from "./create-worker-upload-form";
 import Dev from "./dev/dev";
 import { getVarsForDev } from "./dev/dev-vars";
 import { confirm, prompt } from "./dialogs";
+import { getMigrations, validateDurableObjects } from "./durable";
 import { getEntry } from "./entry";
 import { DeprecationError } from "./errors";
 import {
@@ -67,6 +68,7 @@ import { whoami } from "./whoami";
 
 import type { Config } from "./config";
 import type { TailCLIFilters } from "./tail";
+import type { CfWorkerInit } from "./worker";
 import type { RawData } from "ws";
 import type { CommandModule } from "yargs";
 import type Yargs from "yargs";
@@ -921,6 +923,8 @@ export async function main(argv: string[]): Promise<void> {
       }
 
       const accountId = !args.local ? await requireAuth(config) : undefined;
+      const scriptName = getScriptName(args, config);
+      const legacyEnv = isLegacyEnv(config);
 
       // TODO: if worker_dev = false and no routes, then error (only for dev)
 
@@ -964,6 +968,7 @@ export async function main(argv: string[]): Promise<void> {
       // from the API. That's it!
 
       let zone: { host: string; id: string } | undefined;
+      let migrations: CfWorkerInit["migrations"];
 
       if (!args.local) {
         const hostLike =
@@ -1006,6 +1011,17 @@ export async function main(argv: string[]): Promise<void> {
                 id: zoneId,
               }
             : undefined;
+
+        validateDurableObjects(config);
+        migrations =
+          scriptName && accountId
+            ? await getMigrations(scriptName, {
+                accountId,
+                config,
+                legacyEnv,
+                env: args.env,
+              })
+            : undefined;
       }
 
       const nodeCompat = args.nodeCompat ?? config.node_compat;
@@ -1017,12 +1033,12 @@ export async function main(argv: string[]): Promise<void> {
 
       const { waitUntilExit } = render(
         <Dev
-          name={getScriptName(args, config)}
+          name={scriptName}
           entry={entry}
           env={args.env}
           zone={zone}
           rules={getRules(config)}
-          legacyEnv={isLegacyEnv(config)}
+          legacyEnv={legacyEnv}
           minify={args.minify ?? config.minify}
           nodeCompat={nodeCompat}
           build={config.build || {}}
@@ -1104,6 +1120,7 @@ export async function main(argv: string[]): Promise<void> {
             ),
             unsafe: config.unsafe?.bindings,
           }}
+          migrations={migrations}
           crons={config.triggers.crons}
         />
       );
@@ -1556,6 +1573,7 @@ export async function main(argv: string[]): Promise<void> {
             ),
             unsafe: config.unsafe?.bindings,
           }}
+          migrations={undefined}
           crons={config.triggers.crons}
           inspectorPort={await getPort({ port: 9229 })}
         />
