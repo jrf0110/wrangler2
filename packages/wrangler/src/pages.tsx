@@ -722,6 +722,7 @@ async function buildFunctions({
   onEnd,
   plugin = false,
   buildOutputDirectory,
+  nodeCompat,
 }: {
   outfile: string;
   outputConfigPath?: string;
@@ -733,6 +734,7 @@ async function buildFunctions({
   onEnd?: () => void;
   plugin?: boolean;
   buildOutputDirectory?: string;
+  nodeCompat?: boolean;
 }) {
   RUNNING_BUILDERS.forEach(
     (runningBuilder) => runningBuilder.stop && runningBuilder.stop()
@@ -767,6 +769,7 @@ async function buildFunctions({
         minify,
         sourcemap,
         watch,
+        nodeCompat,
         onEnd,
       })
     );
@@ -781,6 +784,7 @@ async function buildFunctions({
         watch,
         onEnd,
         buildOutputDirectory,
+        nodeCompat,
       })
     );
   }
@@ -1300,6 +1304,11 @@ export const pages: BuilderCallback<unknown, unknown> = (yargs) => {
               default: false,
               description: "Auto reload HTML pages when change is detected",
             },
+            "node-compat": {
+              describe: "Enable node.js compaitibility",
+              default: false,
+              type: "boolean",
+            },
             // TODO: Miniflare user options
           })
           .epilogue(pagesBetaWarning);
@@ -1314,6 +1323,7 @@ export const pages: BuilderCallback<unknown, unknown> = (yargs) => {
         kv: kvs = [],
         do: durableObjects = [],
         "live-reload": liveReload,
+        "node-compat": nodeCompat,
         _: [_pages, _dev, ...remaining],
       }) => {
         // Beta message for `wrangler pages <commands>` usage
@@ -1349,6 +1359,12 @@ export const pages: BuilderCallback<unknown, unknown> = (yargs) => {
         if (usingFunctions) {
           const outfile = join(tmpdir(), "./functionsWorker.js");
 
+          if (nodeCompat) {
+            console.warn(
+              "Enabling node.js compatibility mode for builtins and globals. This is experimental and has serious tradeoffs. Please see https://github.com/ionic-team/rollup-plugin-node-polyfills/ for more details."
+            );
+          }
+
           logger.log(`Compiling worker to "${outfile}"...`);
 
           try {
@@ -1359,6 +1375,7 @@ export const pages: BuilderCallback<unknown, unknown> = (yargs) => {
               watch: true,
               onEnd: () => scriptReadyResolve(),
               buildOutputDirectory: directory,
+              nodeCompat,
             });
           } catch {}
 
@@ -1373,6 +1390,7 @@ export const pages: BuilderCallback<unknown, unknown> = (yargs) => {
               watch: true,
               onEnd: () => scriptReadyResolve(),
               buildOutputDirectory: directory,
+              nodeCompat,
             });
           });
 
@@ -1580,6 +1598,11 @@ export const pages: BuilderCallback<unknown, unknown> = (yargs) => {
                 type: "string",
                 description: "The directory to output static assets to",
               },
+              "node-compat": {
+                describe: "Enable node.js compaitibility",
+                default: false,
+                type: "boolean",
+              },
             })
             .epilogue(pagesBetaWarning),
         async ({
@@ -1592,10 +1615,17 @@ export const pages: BuilderCallback<unknown, unknown> = (yargs) => {
           watch,
           plugin,
           "build-output-directory": buildOutputDirectory,
+          "node-compat": nodeCompat,
         }) => {
           if (!isInPagesCI) {
             // Beta message for `wrangler pages <commands>` usage
             logger.log(pagesBetaWarning);
+          }
+
+          if (nodeCompat) {
+            console.warn(
+              "Enabling node.js compatibility mode for builtins and globals. This is experimental and has serious tradeoffs. Please see https://github.com/ionic-team/rollup-plugin-node-polyfills/ for more details."
+            );
           }
 
           buildOutputDirectory ??= dirname(outfile);
@@ -1610,6 +1640,7 @@ export const pages: BuilderCallback<unknown, unknown> = (yargs) => {
             watch,
             plugin,
             buildOutputDirectory,
+            nodeCompat,
           });
         }
       )
