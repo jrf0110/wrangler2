@@ -1,5 +1,84 @@
 # wrangler
 
+## 2.0.6
+
+### Patch Changes
+
+- [#1018](https://github.com/cloudflare/wrangler2/pull/1018) [`cd2c42f`](https://github.com/cloudflare/wrangler2/commit/cd2c42fca02bff463d78398428dcf079a80e2ae6) Thanks [@threepointone](https://github.com/threepointone)! - fix: strip leading `*`/`*.` from routes when deducing a host for `dev`
+
+  When given routes, we use the host name from the route to deduce a zone id to pass along with the host to set with dev `session`. Route patterns can include leading `*`/`*.`, which we don't account for when deducing said zone id, resulting in subtle errors for the session. This fix strips those leading characters as appropriate.
+
+  Fixes https://github.com/cloudflare/wrangler2/issues/1002
+
+* [#906](https://github.com/cloudflare/wrangler2/pull/906) [`3279f10`](https://github.com/cloudflare/wrangler2/commit/3279f103fb3b1c27addb4c69c30ad970ab0d5f77) Thanks [@threepointone](https://github.com/threepointone)! - feat: implement support for service bindings
+
+  This adds experimental support for service bindings, aka worker-to-worker bindings. It's lets you "call" a worker from another worker, without incurring any network cost, and (ideally) with much less latency. To use it, define a `[services]` field in `wrangler.toml`, which is a map of bindings to worker names (and environment). Let's say you already have a worker named "my-worker" deployed. In another worker's configuration, you can create a service binding to it like so:
+
+  ```toml
+  [[services]]
+  binding = "MYWORKER"
+  service = "my-worker"
+  environment = "production" # optional, defaults to the worker's `default_environment` for now
+  ```
+
+  And in your worker, you can call it like so:
+
+  ```js
+  export default {
+    fetch(req, env, ctx) {
+      return env.MYWORKER.fetch(new Request("http://domain/some-path"));
+    }
+  };
+  ```
+
+  Fixes https://github.com/cloudflare/wrangler2/issues/1026
+
+- [#1039](https://github.com/cloudflare/wrangler2/pull/1039) [`95852c3`](https://github.com/cloudflare/wrangler2/commit/95852c304716e8b9b97ef2a5486c8337cc278f1d) Thanks [@threepointone](https://github.com/threepointone)! - fix: don't fetch migrations when in `--dry-run` mode
+
+  Fixes https://github.com/cloudflare/wrangler2/issues/1038
+
+* [#1033](https://github.com/cloudflare/wrangler2/pull/1033) [`ffce3e3`](https://github.com/cloudflare/wrangler2/commit/ffce3e3fa1bf04a1597d4fd1c6ef5ed536b81308) Thanks [@petebacondarwin](https://github.com/petebacondarwin)! - fix: `wrangler init` should not crash if Git is not available on Windows
+
+  We check for the presence of Git by trying to run `git --version`.
+  On non-Windows we get an Error with `code` set to "ENOENT".
+  One Windows we get a different error:
+
+  ```
+  {
+    "shortMessage":"Command failed with exit code 1: git --version",
+    "command":"git --version",
+    "escapedCommand":"git --version",
+    "exitCode":1,
+    "stdout":"",
+    "stderr":"'git' is not recognized as an internal or external command,\r\noperable program or batch file.",
+    "failed":true,
+    "timedOut":false,
+    "isCanceled":false,
+    "killed":false
+  }
+  ```
+
+  Since we don't really care what the error is, now we just assume that Git
+  is not available if an error is thrown.
+
+  Fixes #1022
+
+- [#1019](https://github.com/cloudflare/wrangler2/pull/1019) [`5816eba`](https://github.com/cloudflare/wrangler2/commit/5816ebae462a5ec9252b9df1b46ace3204bc81e8) Thanks [@threepointone](https://github.com/threepointone)! - feat: bind a durable object by environment
+
+  For durable objects, instead of just `{ name, class_name, script_name}`, this lets you bind by environment as well, like so `{ name, class_name, script_name, environment }`.
+
+  Fixes https://github.com/cloudflare/wrangler2/issues/996
+
+* [#1027](https://github.com/cloudflare/wrangler2/pull/1027) [`3545e41`](https://github.com/cloudflare/wrangler2/commit/3545e419a70f4f0d5dd305972bf63acf11f91d5c) Thanks [@rozenmd](https://github.com/rozenmd)! - feat: trying to use node builtins should recommend you enable node_compat in wrangler.toml
+
+- [#1024](https://github.com/cloudflare/wrangler2/pull/1024) [`110f340`](https://github.com/cloudflare/wrangler2/commit/110f340061918026938cda2aba158276386fe6e9) Thanks [@threepointone](https://github.com/threepointone)! - polish: validate payload for `kv:bulk put` on client side
+
+  This adds client side validation for the paylod for `kv:bulk put`, importantly ensuring we're uploading only string key/value pairs (as well as validation for the other fields).
+
+  Fixes https://github.com/cloudflare/wrangler2/issues/571
+
+* [#1037](https://github.com/cloudflare/wrangler2/pull/1037) [`963e9e0`](https://github.com/cloudflare/wrangler2/commit/963e9e08e52f7871923bded3fd5c2cb2ec452532) Thanks [@rozenmd](https://github.com/rozenmd)! - fix: don't attempt to login during a --dryRun
+
 ## 2.0.5
 
 ### Patch Changes
