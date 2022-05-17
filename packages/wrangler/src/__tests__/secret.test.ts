@@ -60,6 +60,21 @@ describe("wrangler secret", () => {
     describe("interactive", () => {
       useMockStdin({ isTTY: true });
 
+      test("should trim stdin secret value", async () => {
+        mockPrompt({
+          text: "Enter a secret value:",
+          type: "password",
+          result: `  hunter2   `,
+        });
+
+        mockPutRequest({ name: `secret-name`, text: `hunter2` });
+        await runWrangler("secret put secret-name --name script-name");
+        expect(std.out).toMatchInlineSnapshot(`
+          "🌀 Creating the secret for script script-name
+          ✨ Success! Uploaded secret secret-name"
+        `);
+      });
+
       it("should create a secret", async () => {
         mockPrompt({
           text: "Enter a secret value:",

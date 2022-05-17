@@ -1740,7 +1740,7 @@ export async function main(argv: string[]): Promise<void> {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   name: args.key,
-                  text: secretValue,
+                  text: secretValue.trim(),
                   type: "secret_text",
                 }),
               });
