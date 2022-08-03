@@ -329,7 +329,6 @@ export const Handler = async ({
 
 	if (_routes) {
 		formData.append("_routes.json", new File([_routes], "_routes.json"));
-
 	}
 
 	if (builtFunctions) {
