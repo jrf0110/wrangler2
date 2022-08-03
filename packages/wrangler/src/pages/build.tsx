@@ -12,7 +12,7 @@ import { writeRoutesModule } from "./functions/routes";
 import { pagesBetaWarning, RUNNING_BUILDERS } from "./utils";
 import type { Config } from "./functions/routes";
 import type { ArgumentsCamelCase, Argv } from "yargs";
-import { convertRoutePathsToGlobPatterns } from "./functions/routes-transformation";
+import { convertRoutesToGlobPatterns } from "./functions/routes-transformation";
 
 type PagesBuildArgs = {
 	directory: string;
@@ -167,12 +167,12 @@ export async function buildFunctions({
 			logger.warn(
 				"Cannot write generated routes file _routes.generated.json. Output directory is undefined."
 			);
-		} else if(existsSync(join(buildOutputDirectory, "_routes.json"))) {
-			logger.log("Found _routes.json file. Skipping automatic routes generation.");
-		} else {
-			const routesGlobPatterns: string[] = convertRoutePathsToGlobPatterns(
-				config.routes.map((route) => route.routePath)
+		} else if (existsSync(join(buildOutputDirectory, "_routes.json"))) {
+			logger.log(
+				"Found _routes.json file. Skipping automatic routes generation."
 			);
+		} else {
+			const routesGlobPatterns = convertRoutesToGlobPatterns(config.routes);
 			writeFileSync(
 				join(buildOutputDirectory, "_routes.generated.json"),
 				JSON.stringify(routesGlobPatterns, null, 2)
