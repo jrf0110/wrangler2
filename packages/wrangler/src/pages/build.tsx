@@ -9,7 +9,6 @@ import { buildPlugin } from "./functions/buildPlugin";
 import { buildWorker } from "./functions/buildWorker";
 import { generateConfigFromFileTree } from "./functions/filepath-routing";
 import { writeRoutesModule } from "./functions/routes";
-import { convertRoutePathsToGlobPatterns } from "./functions/routes-transformation";
 import { pagesBetaWarning, RUNNING_BUILDERS } from "./utils";
 import type { Config } from "./functions/routes";
 import type { ArgumentsCamelCase, Argv } from "yargs";
